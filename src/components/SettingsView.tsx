@@ -23,6 +23,7 @@ import {
   DEEPSEEK_MODEL_OPTIONS,
   ENGINE_META,
   ENGINE_ORDER,
+  normalizeOpenRouterModel,
   QWEN_MODEL_OPTIONS,
   type EngineModelOption,
 } from '../constants/engines';
@@ -50,6 +51,66 @@ interface SettingsViewProps {
 
 type TestResultState = { ok: boolean; message: string } | null;
 
+interface OpenRouterCatalogInfo {
+  freeCount: number;
+  qwenFreeCount: number;
+  deepseekFreeCount: number;
+  qwenPaidCount: number;
+  deepseekPaidCount: number;
+}
+
+function OpenRouterTestAlert({ result }: { result: TestResultState }) {
+  if (!result) return null;
+  const lower = result.message.toLowerCase();
+  const showPrivacyLink = !result.ok && (lower.includes('privacy') || lower.includes('gizlilik'));
+  const showCreditsLink = !result.ok && lower.includes('kredi');
+
+  return (
+    <div
+      className={`mt-2.5 flex items-start gap-2 overflow-hidden rounded-lg border p-2.5 text-[11px] ${
+        result.ok
+          ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+          : 'border-rose-200 bg-rose-50 text-rose-800'
+      }`}
+    >
+      {result.ok ? (
+        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
+      ) : (
+        <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-600" />
+      )}
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <p className="break-words">{result.message}</p>
+        {(showPrivacyLink || showCreditsLink) && (
+          <div className="flex flex-wrap gap-2">
+            {showPrivacyLink && (
+              <a
+                href="https://openrouter.ai/settings/privacy"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 rounded-md bg-white/80 px-2 py-0.5 font-bold text-rose-800 underline hover:bg-white"
+              >
+                Gizlilik Ayarını Aç
+                <ExternalLink className="h-2.5 w-2.5" />
+              </a>
+            )}
+            {showCreditsLink && (
+              <a
+                href="https://openrouter.ai/settings/credits"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 rounded-md bg-white/80 px-2 py-0.5 font-bold text-rose-800 underline hover:bg-white"
+              >
+                OpenRouter Kredi Sayfası
+                <ExternalLink className="h-2.5 w-2.5" />
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function SettingsView({
   settings,
   onSaveSettings,
@@ -67,11 +128,16 @@ export function SettingsView({
 
   // OpenRouter (Qwen & DeepSeek) state
   const [openRouterApiKey, setOpenRouterApiKey] = useState(settings.openRouterApiKey);
-  const [qwenModel, setQwenModel] = useState(settings.qwenModel);
-  const [deepseekModel, setDeepseekModel] = useState(settings.deepseekModel);
+  const [qwenModel, setQwenModel] = useState(() =>
+    normalizeOpenRouterModel(settings.qwenModel, 'qwen'),
+  );
+  const [deepseekModel, setDeepseekModel] = useState(() =>
+    normalizeOpenRouterModel(settings.deepseekModel, 'deepseek'),
+  );
   const [qwenOptions, setQwenOptions] = useState<EngineModelOption[]>(QWEN_MODEL_OPTIONS);
   const [deepseekOptions, setDeepseekOptions] =
     useState<EngineModelOption[]>(DEEPSEEK_MODEL_OPTIONS);
+  const [orCatalogInfo, setOrCatalogInfo] = useState<OpenRouterCatalogInfo | null>(null);
   const [loadingOrModels, setLoadingOrModels] = useState(false);
   const [orModelsNotice, setOrModelsNotice] = useState<string | null>(null);
   const [showOrKey, setShowOrKey] = useState(false);
@@ -160,16 +226,37 @@ export function SettingsView({
       setOrModelsNotice(null);
     }
     try {
-      const { qwen, deepseek } = await fetchOpenRouterModelsByFamily(forceRefresh);
+      const {
+        qwen,
+        deepseek,
+        freeModels,
+        qwenFreeCount,
+        deepseekFreeCount,
+        qwenPaidCount,
+        deepseekPaidCount,
+      } = await fetchOpenRouterModelsByFamily(forceRefresh);
       if (qwen.length > 0) {
         setQwenOptions(qwen);
+        setQwenModel((current) =>
+          qwen.some((m) => m.id === current) ? current : qwen[0].id,
+        );
       }
       if (deepseek.length > 0) {
         setDeepseekOptions(deepseek);
+        setDeepseekModel((current) =>
+          deepseek.some((m) => m.id === current) ? current : deepseek[0].id,
+        );
       }
+      setOrCatalogInfo({
+        freeCount: freeModels.length,
+        qwenFreeCount,
+        deepseekFreeCount,
+        qwenPaidCount,
+        deepseekPaidCount,
+      });
       if (qwen.length > 0 || deepseek.length > 0) {
         setOrModelsNotice(
-          `OpenRouter'dan ${qwen.length} Qwen ve ${deepseek.length} DeepSeek modeli yüklendi.`,
+          `OpenRouter'dan ${freeModels.length} ücretsiz (:free) + ${qwenPaidCount} Qwen ve ${deepseekPaidCount} DeepSeek modeli yüklendi.`,
         );
       }
     } catch (err) {
@@ -210,9 +297,9 @@ export function SettingsView({
         model,
         candidateIds,
       );
+      onSaveSettings(buildCurrentPayload({ model: usedModel }));
       if (usedModel !== model) {
         setModel(usedModel);
-        onSaveSettings(buildCurrentPayload({ model: usedModel }));
         setGeminiTestResult({
           ok: true,
           message: `"${model}" geçici yoğunluk/kota nedeniyle yanıt vermediği için çalışan "${usedModel}" modeline geçildi ve kaydedildi. Yanıt: ${reply}`,
@@ -236,9 +323,15 @@ export function SettingsView({
     }
 
     const isQwen = family === 'qwen';
-    const currentModel = isQwen ? qwenModel : deepseekModel;
+    const rawCurrentModel = isQwen ? qwenModel : deepseekModel;
+    const currentModel = normalizeOpenRouterModel(rawCurrentModel, family);
+    if (currentModel !== rawCurrentModel) {
+      if (isQwen) setQwenModel(currentModel);
+      else setDeepseekModel(currentModel);
+    }
+
     const fallbacks = (isQwen ? qwenOptions : deepseekOptions)
-      .filter((opt) => opt.isFree !== false)
+      .filter((opt) => opt.isFree === true)
       .map((opt) => opt.id);
 
     if (isQwen) {
@@ -257,26 +350,26 @@ export function SettingsView({
         fallbacks,
       );
 
-      if (usedModel !== currentModel) {
-        if (isQwen) {
-          setQwenModel(usedModel);
-          onSaveSettings(buildCurrentPayload({ qwenModel: usedModel }));
-          setQwenTestResult({
-            ok: true,
-            message: `"${currentModel}" yerine çalışan "${usedModel}" modeline geçildi ve kaydedildi. Yanıt: ${reply}`,
-          });
-        } else {
-          setDeepseekModel(usedModel);
-          onSaveSettings(buildCurrentPayload({ deepseekModel: usedModel }));
-          setDeepseekTestResult({
-            ok: true,
-            message: `"${currentModel}" yerine çalışan "${usedModel}" modeline geçildi ve kaydedildi. Yanıt: ${reply}`,
-          });
-        }
+      if (isQwen) {
+        setQwenModel(usedModel);
+        onSaveSettings(buildCurrentPayload({ qwenModel: usedModel }));
+        setQwenTestResult({
+          ok: true,
+          message:
+            usedModel !== currentModel
+              ? `"${currentModel}" yerine çalışan "${usedModel}" modeline geçildi ve kaydedildi. Yanıt: ${reply}`
+              : `(${usedModel}) ${reply} — Anahtar kaydedildi.`,
+        });
       } else {
-        const res = { ok: true, message: `(${usedModel}) ${reply}` };
-        if (isQwen) setQwenTestResult(res);
-        else setDeepseekTestResult(res);
+        setDeepseekModel(usedModel);
+        onSaveSettings(buildCurrentPayload({ deepseekModel: usedModel }));
+        setDeepseekTestResult({
+          ok: true,
+          message:
+            usedModel !== currentModel
+              ? `"${currentModel}" yerine çalışan "${usedModel}" modeline geçildi ve kaydedildi. Yanıt: ${reply}`
+              : `(${usedModel}) ${reply} — Anahtar kaydedildi.`,
+        });
       }
     } catch (err) {
       const errMsg = formatOpenRouterError(err, currentModel);
@@ -487,15 +580,60 @@ export function SettingsView({
               {showOrKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-slate-500">
+          <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
             <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-            Anahtarlarınız yalnızca tarayıcınızın <code className="rounded bg-slate-100 px-1">localStorage</code> alanında saklanır. Ücretsiz (<code className="rounded bg-slate-100 px-1">:free</code>) modellerde OpenRouter gizlilik ayarı gerekebilir.
+            <span>
+              Anahtarlarınız yalnızca tarayıcınızın <code className="rounded bg-slate-100 px-1">localStorage</code> alanında saklanır. Ücretsiz (<code className="rounded bg-slate-100 px-1">:free</code>) modellerde{' '}
+              <a
+                href="https://openrouter.ai/settings/privacy"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-0.5 font-semibold text-violet-700 underline decoration-violet-300 hover:text-violet-900"
+              >
+                OpenRouter gizlilik ayarı
+                <ExternalLink className="h-2.5 w-2.5" />
+              </a>{' '}
+              izni gerekebilir.
+            </span>
           </p>
         </div>
 
         {orModelsNotice && (
           <p className="mt-2 text-[11px] font-medium text-violet-700">{orModelsNotice}</p>
         )}
+
+        {orCatalogInfo &&
+          orCatalogInfo.qwenFreeCount === 0 &&
+          orCatalogInfo.deepseekFreeCount === 0 && (
+            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/75 p-3 text-[11px] leading-relaxed text-amber-950">
+              <p className="font-bold">
+                Bilgi: Resmi Qwen ve DeepSeek modelleri şu an OpenRouter&apos;da yalnızca kredili (~$0.03/1M token&apos;dan başlayan) olarak sunuluyor.
+              </p>
+              <p className="mt-1 text-amber-900/90">
+                Bakiyeniz $0 iken hemen test edebilmeniz için listenin en üstüne güncel ücretsiz (<code className="rounded bg-amber-100 px-1">:free</code>) modeller yerleştirildi. Ücretsiz modeller için{' '}
+                <a
+                  href="https://openrouter.ai/settings/privacy"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-0.5 font-bold text-amber-900 underline"
+                >
+                  Gizlilik Ayarı
+                  <ExternalLink className="h-2.5 w-2.5" />
+                </a>
+                &apos;nı açabilir, doğrudan Qwen/DeepSeek modelleri için{' '}
+                <a
+                  href="https://openrouter.ai/settings/credits"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-0.5 font-bold text-amber-900 underline"
+                >
+                  Kredi Ekle
+                  <ExternalLink className="h-2.5 w-2.5" />
+                </a>{' '}
+                sayfasını kullanabilirsiniz.
+              </p>
+            </div>
+          )}
 
         {/* Qwen & DeepSeek Model Selectors */}
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -535,22 +673,7 @@ export function SettingsView({
                 Qwen Test Et
               </button>
             </div>
-            {qwenTestResult && (
-              <div
-                className={`mt-2.5 flex items-start gap-2 overflow-hidden rounded-lg border p-2.5 text-[11px] ${
-                  qwenTestResult.ok
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                    : 'border-rose-200 bg-rose-50 text-rose-800'
-                }`}
-              >
-                {qwenTestResult.ok ? (
-                  <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                ) : (
-                  <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-600" />
-                )}
-                <p className="min-w-0 flex-1 break-words">{qwenTestResult.message}</p>
-              </div>
-            )}
+            <OpenRouterTestAlert result={qwenTestResult} />
           </div>
 
           {/* DeepSeek */}
@@ -589,22 +712,7 @@ export function SettingsView({
                 DeepSeek Test Et
               </button>
             </div>
-            {deepseekTestResult && (
-              <div
-                className={`mt-2.5 flex items-start gap-2 overflow-hidden rounded-lg border p-2.5 text-[11px] ${
-                  deepseekTestResult.ok
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                    : 'border-rose-200 bg-rose-50 text-rose-800'
-                }`}
-              >
-                {deepseekTestResult.ok ? (
-                  <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                ) : (
-                  <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-600" />
-                )}
-                <p className="min-w-0 flex-1 break-words">{deepseekTestResult.message}</p>
-              </div>
-            )}
+            <OpenRouterTestAlert result={deepseekTestResult} />
           </div>
         </div>
       </section>

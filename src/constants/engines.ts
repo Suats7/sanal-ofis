@@ -68,64 +68,171 @@ export const DEFAULT_AGENT_ENGINES: Record<AgentId, EngineId> = {
   siberci: 'deepseek',
 };
 
-export const DEFAULT_QWEN_MODEL = 'qwen/qwen3-235b-a22b:free';
-export const DEFAULT_DEEPSEEK_MODEL = 'deepseek/deepseek-chat-v3-0324:free';
+export const DEFAULT_QWEN_MODEL = 'google/gemma-4-31b-it:free';
+export const DEFAULT_DEEPSEEK_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b:free';
+
+const RETIRED_OPENROUTER_MODELS = new Set<string>([
+  'qwen/qwen3-235b-a22b:free',
+  'qwen/qwen3-32b:free',
+  'qwen/qwen-2.5-72b-instruct:free',
+  'qwen/qwen-2.5-coder-32b-instruct:free',
+  'deepseek/deepseek-chat-v3-0324:free',
+  'deepseek/deepseek-r1:free',
+  'deepseek/deepseek-r1-0528:free',
+]);
+
+export function isFreeOpenRouterModelId(id: string): boolean {
+  const trimmed = id.trim().toLowerCase();
+  return trimmed === 'openrouter/free' || trimmed.endsWith(':free');
+}
+
+export const OPENROUTER_FREE_MODEL_OPTIONS: EngineModelOption[] = [
+  {
+    id: 'openrouter/free',
+    label: 'openrouter/free — Otomatik Ücretsiz Yönlendirici • Ücretsiz (OpenRouter)',
+    isFree: true,
+  },
+  {
+    id: 'google/gemma-4-31b-it:free',
+    label: 'google/gemma-4-31b-it:free — Google Gemma 4 31B • Ücretsiz (OpenRouter)',
+    isFree: true,
+  },
+  {
+    id: 'nvidia/nemotron-3-ultra-550b-a55b:free',
+    label: 'nvidia/nemotron-3-ultra-550b-a55b:free — NVIDIA Nemotron 3 Ultra • Ücretsiz (OpenRouter)',
+    isFree: true,
+  },
+  {
+    id: 'nvidia/nemotron-3.5-lightning:free',
+    label: 'nvidia/nemotron-3.5-lightning:free — NVIDIA Nemotron 3.5 Lightning • Ücretsiz (OpenRouter)',
+    isFree: true,
+  },
+  {
+    id: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
+    label:
+      'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free — NVIDIA Nemotron 3 Nano Omni • Ücretsiz (OpenRouter)',
+    isFree: true,
+  },
+  {
+    id: 'baidu/ernie-5.5-flash-preview:free',
+    label: 'baidu/ernie-5.5-flash-preview:free — Baidu ERNIE 5.5 Flash • Ücretsiz (OpenRouter)',
+    isFree: true,
+  },
+  {
+    id: 'inclusionai/ling-3.2-flash:free',
+    label: 'inclusionai/ling-3.2-flash:free — inclusionAI Ling 3.2 Flash • Ücretsiz (OpenRouter)',
+    isFree: true,
+  },
+  {
+    id: 'google/gemma-4-26b-a4b-it:free',
+    label: 'google/gemma-4-26b-a4b-it:free — Google Gemma 4 26B A4B • Ücretsiz (OpenRouter)',
+    isFree: true,
+  },
+];
 
 export const QWEN_MODEL_OPTIONS: EngineModelOption[] = [
   {
-    id: 'qwen/qwen3-235b-a22b:free',
-    label: 'qwen/qwen3-235b-a22b:free • Ücretsiz (Güçlü Flagship)',
+    id: 'google/gemma-4-31b-it:free',
+    label: 'google/gemma-4-31b-it:free — Gemma 4 31B • Ücretsiz (OpenRouter)',
     isFree: true,
   },
   {
-    id: 'qwen/qwen3-32b:free',
-    label: 'qwen/qwen3-32b:free • Ücretsiz (Hızlı & Dengeli)',
+    id: 'openrouter/free',
+    label: 'openrouter/free — Otomatik Ücretsiz Yönlendirici • Ücretsiz (OpenRouter)',
     isFree: true,
   },
   {
-    id: 'qwen/qwen-2.5-72b-instruct:free',
-    label: 'qwen/qwen-2.5-72b-instruct:free • Ücretsiz',
+    id: 'nvidia/nemotron-3-ultra-550b-a55b:free',
+    label: 'nvidia/nemotron-3-ultra-550b-a55b:free — Nemotron 3 Ultra • Ücretsiz (OpenRouter)',
     isFree: true,
   },
   {
-    id: 'qwen/qwen-2.5-coder-32b-instruct:free',
-    label: 'qwen/qwen-2.5-coder-32b-instruct:free • Ücretsiz (Kod)',
+    id: 'nvidia/nemotron-3.5-lightning:free',
+    label: 'nvidia/nemotron-3.5-lightning:free — Nemotron 3.5 Lightning • Ücretsiz (OpenRouter)',
     isFree: true,
   },
   {
-    id: 'qwen/qwen-2.5-72b-instruct',
-    label: 'qwen/qwen-2.5-72b-instruct (Ücretli Kredi)',
+    id: 'qwen/qwen3.7-flash',
+    label: 'qwen/qwen3.7-flash — Qwen3.7 Flash • $0.03/M Kredili',
+    isFree: false,
+  },
+  {
+    id: 'qwen/qwen3.8-27b',
+    label: 'qwen/qwen3.8-27b — Qwen3.8 27B • $0.06/M Kredili',
+    isFree: false,
+  },
+  {
+    id: 'qwen/qwen3-coder-30b-a3b-instruct',
+    label: 'qwen/qwen3-coder-30b-a3b-instruct — Qwen3 Coder 30B • $0.07/M Kredili',
+    isFree: false,
+  },
+  {
+    id: 'qwen/qwen3.8-flash',
+    label: 'qwen/qwen3.8-flash — Qwen3.8 Flash • $0.15/M Kredili',
+    isFree: false,
+  },
+  {
+    id: 'qwen/qwen4-max',
+    label: 'qwen/qwen4-max — Qwen4 Max • $1.43/M Kredili',
     isFree: false,
   },
 ];
 
 export const DEEPSEEK_MODEL_OPTIONS: EngineModelOption[] = [
   {
-    id: 'deepseek/deepseek-chat-v3-0324:free',
-    label: 'deepseek/deepseek-chat-v3-0324:free • Ücretsiz (V3 Güncel)',
+    id: 'nvidia/nemotron-3-ultra-550b-a55b:free',
+    label: 'nvidia/nemotron-3-ultra-550b-a55b:free — Nemotron 3 Ultra • Ücretsiz (OpenRouter)',
     isFree: true,
   },
   {
-    id: 'deepseek/deepseek-r1:free',
-    label: 'deepseek/deepseek-r1:free • Ücretsiz (R1 Muhakeme)',
+    id: 'openrouter/free',
+    label: 'openrouter/free — Otomatik Ücretsiz Yönlendirici • Ücretsiz (OpenRouter)',
     isFree: true,
   },
   {
-    id: 'deepseek/deepseek-r1-0528:free',
-    label: 'deepseek/deepseek-r1-0528:free • Ücretsiz (R1 Güncel)',
+    id: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
+    label:
+      'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free — Nemotron 3 Nano Omni • Ücretsiz (OpenRouter)',
     isFree: true,
   },
   {
-    id: 'deepseek/deepseek-chat',
-    label: 'deepseek/deepseek-chat (Ücretli Kredi)',
+    id: 'google/gemma-4-31b-it:free',
+    label: 'google/gemma-4-31b-it:free — Gemma 4 31B • Ücretsiz (OpenRouter)',
+    isFree: true,
+  },
+  {
+    id: 'deepseek/deepseek-v4.1-flash',
+    label: 'deepseek/deepseek-v4.1-flash — DeepSeek V4.1 Flash • $0.05/M Kredili',
     isFree: false,
   },
   {
-    id: 'deepseek/deepseek-r1',
-    label: 'deepseek/deepseek-r1 (Ücretli Kredi)',
+    id: 'deepseek/deepseek-v4-pro-0813',
+    label: 'deepseek/deepseek-v4-pro-0813 — DeepSeek V4 Pro 0813 • $0.11/M Kredili',
+    isFree: false,
+  },
+  {
+    id: 'deepseek/deepseek-v3.2',
+    label: 'deepseek/deepseek-v3.2 — DeepSeek V3.2 • $0.26/M Kredili',
+    isFree: false,
+  },
+  {
+    id: 'deepseek/deepseek-r1-0528',
+    label: 'deepseek/deepseek-r1-0528 — DeepSeek R1 0528 • $0.57/M Kredili',
     isFree: false,
   },
 ];
+
+export function normalizeOpenRouterModel(
+  model: string | undefined | null,
+  family: 'qwen' | 'deepseek',
+): string {
+  const defaultModel = family === 'qwen' ? DEFAULT_QWEN_MODEL : DEFAULT_DEEPSEEK_MODEL;
+  const trimmed = typeof model === 'string' ? model.trim() : '';
+  if (!trimmed || RETIRED_OPENROUTER_MODELS.has(trimmed.toLowerCase())) {
+    return defaultModel;
+  }
+  return trimmed;
+}
 
 function isValidEngineId(value: unknown): value is EngineId {
   return value === 'gemini' || value === 'qwen' || value === 'deepseek';
@@ -163,14 +270,8 @@ export function normalizeAppSettings(
       typeof raw?.model === 'string' && raw.model.trim()
         ? raw.model.trim()
         : defaultGeminiModel,
-    qwenModel:
-      typeof raw?.qwenModel === 'string' && raw.qwenModel.trim()
-        ? raw.qwenModel.trim()
-        : DEFAULT_QWEN_MODEL,
-    deepseekModel:
-      typeof raw?.deepseekModel === 'string' && raw.deepseekModel.trim()
-        ? raw.deepseekModel.trim()
-        : DEFAULT_DEEPSEEK_MODEL,
+    qwenModel: normalizeOpenRouterModel(raw?.qwenModel, 'qwen'),
+    deepseekModel: normalizeOpenRouterModel(raw?.deepseekModel, 'deepseek'),
     agentEngines,
     parallelMode: typeof raw?.parallelMode === 'boolean' ? raw.parallelMode : true,
     demoMode: typeof raw?.demoMode === 'boolean' ? raw.demoMode : false,
