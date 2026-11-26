@@ -1,0 +1,52 @@
+# 🏢 3D Sanal AI Ajan Ofisi
+
+**Gemini Ofisi**, **Qwen Stüdyosu** ve **DeepSeek Lab** kanatlarından oluşan 3 boyutlu izometrik çoklu-ajan AI çalışma kampüsü.
+
+## ✨ Öne Çıkan Özellikler
+
+- **🔒 Kilitli CEO Sauron (`src/constants/ceoLock.ts`)**: Ofisin baş yöneticisi **Sauron**, çalışma zamanında `Object.freeze` + `assertSauronIntegrity` ile ve GitHub tarafında otomatik CI kontrolüyle korunur. Kendi başına görev üretebilir (`Sauron Görev Üretsin`) ve ekibi koordine eder.
+- **🛡️ 5 Uzmanlı Tam Kadro**:
+  - **Sauron** (`CEO`) — Stratejik planlama, otonom görev başlatma
+  - **Araştırmacı** (`◈ Qwen`) — Pazar, trend ve hedef kitle analizi
+  - **İçerikçi** (`✦ Gemini`) — Reels/Shorts senaryoları, kanca başlıklar, metin yazarlığı
+  - **Yazılımcı** (`⌘ DeepSeek`) — HTML, CSS, JS, React, TypeScript ve Python geliştirme
+  - **Siberci** (`⌘ DeepSeek`) — OWASP Top 10, XSS/CSRF/CSP güvenlik denetimi ve sertleştirme
+- **🌆 Dinamik 3D Atmosfer (`Gündüz` / `Akşam` / `Cyber`)**: Tek tıkla gün ışığı, altın günbatımı veya neon ışıklı Gece Cyber temasına geçiş; CEO Sauron masasından aktif kanatlara uçan 3D görev veri ışınları ve yumuşak geçişli kamera odağı.
+- **▶ Korumalı Canlı HTML Önizleme**: Yazılımcı ajanının ürettiği HTML/JS prototiplerini doğrudan uygulama içindeki `sandbox="allow-scripts"` iframe penceresinde canlı çalıştırma.
+- **🎯 Doğrudan 1-e-1 `@Ajan` Mesajlaşma**: İster tüm ekibe (CEO Sauron), ister doğrudan `@siberci`, `@yazilimci`, `@arastirmaci`, `@icerikci` ajanına tek tıkla görev gönderme.
+- **📊 Yönetici Analitiği, Siberci Güvenlik Radarı & Ses Efektleri**: AI motor dağılımı, denetlenmemiş çıktılar için tek tık Siberci denetimi, tüm görevi tek `.md` raporu olarak indirme ve Web Audio API ofis sesleri.
+
+---
+
+## 🚀 Kurulum & Çalıştırma
+
+```bash
+npm install
+npm run dev
+```
+
+Doğrulama ve üretim derlemesi:
+
+```bash
+npm run verify:sauron
+npm run build
+```
+
+> **Not:** API anahtarlarınız (Google AI Studio / OpenRouter) yalnızca kendi tarayıcınızın `localStorage` alanında saklanır; depoya veya harici bir sunucuya yazılmaz.
+
+---
+
+## 🔒 GitHub'a Yükleme & CEO Sauron Koruma Ayarları
+
+Yerel git deposu hazırlandıktan sonra kendi GitHub deponuza şu adımlarla yükleyebilirsiniz:
+
+```bash
+git remote add origin https://github.com/<KULLANICI_ADIN>/<REPO_ADIN>.git
+git push -u origin main
+```
+
+Yönetici **CEO Sauron**'un kimse tarafından değiştirilememesi için GitHub deponuzda:
+1. `.github/CODEOWNERS` dosyasındaki `@YOUR_GITHUB_USERNAME` alanını kendi GitHub kullanıcı adınızla güncelleyin.
+2. **Settings → Branches → Add branch ruleset / protection rule** (`main` dalı):
+   - **Require a pull request before merging** + **Require review from Code Owners** seçeneklerini açın.
+   - **Require status checks to pass before merging** içinde **`sauron-guard`** kontrolünü zorunlu kılın.

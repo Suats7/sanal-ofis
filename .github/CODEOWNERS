@@ -1,0 +1,6 @@
+# CEO Sauron kimliği ve koruma kuralları yalnızca depo sahibi onayıyla değiştirilebilir.
+# GitHub'a attıktan sonra @YOUR_GITHUB_USERNAME yerine kendi GitHub kullanıcı adını yaz.
+/src/constants/ceoLock.ts @YOUR_GITHUB_USERNAME
+/src/constants/agents.ts @YOUR_GITHUB_USERNAME
+/scripts/verify-sauron.mjs @YOUR_GITHUB_USERNAME
+/.github/workflows/sauron-guard.yml @YOUR_GITHUB_USERNAME
