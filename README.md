@@ -38,15 +38,14 @@ npm run build
 
 ## 🔒 GitHub'a Yükleme & CEO Sauron Koruma Ayarları
 
-Yerel git deposu hazırlandıktan sonra kendi GitHub deponuza şu adımlarla yükleyebilirsiniz:
+Yerel git deposu hazırlandıktan sonra GitHub deponuza şu adımlarla yükleyebilirsiniz:
 
 ```bash
-git remote add origin https://github.com/<KULLANICI_ADIN>/<REPO_ADIN>.git
+git remote add origin https://github.com/Suats7/sanal-ofis.git
 git push -u origin main
 ```
 
-Yönetici **CEO Sauron**'un kimse tarafından değiştirilememesi için GitHub deponuzda:
-1. `.github/CODEOWNERS` dosyasındaki `@YOUR_GITHUB_USERNAME` alanını kendi GitHub kullanıcı adınızla güncelleyin.
-2. **Settings → Branches → Add branch ruleset / protection rule** (`main` dalı):
+Yönetici **CEO Sauron**'un kimse tarafından değiştirilememesi için `.github/CODEOWNERS` dosyası **`@Suats7`** adına ayarlanmıştır. GitHub deponuzda ek koruma için:
+1. **Settings → Branches → Add branch ruleset / protection rule** (`main` dalı):
    - **Require a pull request before merging** + **Require review from Code Owners** seçeneklerini açın.
    - **Require status checks to pass before merging** içinde **`sauron-guard`** kontrolünü zorunlu kılın.
