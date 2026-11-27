@@ -33,6 +33,9 @@ jobs:
       - name: Verify immutable CEO Sauron identity
         run: npm run verify:sauron
 
+      - name: Run Vitest unit tests
+        run: npm test
+
       - name: Build production bundle
         run: npm run build
 

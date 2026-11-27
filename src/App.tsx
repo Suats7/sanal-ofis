@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { AGENTS, SAURON_AUTO_MISSIONS } from './constants/agents';
 import { assertSauronIntegrity } from './constants/ceoLock';
 import { ENGINE_META, normalizeAppSettings } from './constants/engines';
@@ -43,11 +43,28 @@ import type {
   TaskRun,
 } from './types';
 import { Navbar } from './components/Navbar';
-import { OfficeScene } from './components/office/OfficeScene';
 import { ChatPanel, type ChatTargetSelection } from './components/ChatPanel';
-import { BoardView } from './components/BoardView';
-import { SettingsView } from './components/SettingsView';
-import { ProgressionModal } from './components/ProgressionModal';
+
+const OfficeScene = lazy(() =>
+  import('./components/office/OfficeScene').then((m) => ({ default: m.OfficeScene })),
+);
+const BoardView = lazy(() =>
+  import('./components/BoardView').then((m) => ({ default: m.BoardView })),
+);
+const SettingsView = lazy(() =>
+  import('./components/SettingsView').then((m) => ({ default: m.SettingsView })),
+);
+const ProgressionModal = lazy(() =>
+  import('./components/ProgressionModal').then((m) => ({ default: m.ProgressionModal })),
+);
+
+function ViewLoadingFallback({ label }: { label: string }) {
+  return (
+    <div className="flex h-full min-h-[320px] w-full items-center justify-center rounded-2xl border border-[#e3d9c8] bg-[#f4f1ea]/80 text-xs font-bold text-slate-500">
+      {label}
+    </div>
+  );
+}
 
 const STORAGE_KEYS = {
   settings: 'sanal_ofis_settings_v1',
@@ -1004,21 +1021,23 @@ ${plan.steps
           }
         >
           <div className="h-[520px] min-h-[460px] lg:col-span-7 lg:h-full lg:min-h-0 xl:col-span-8">
-            <OfficeScene
-              agentStates={agentStates}
-              agentEngines={settings.agentEngines}
-              progression={progression}
-              displayOfficeLevel={displayOfficeLevel}
-              previewOfficeLevel={previewOfficeLevel}
-              onSetPreviewOfficeLevel={setPreviewOfficeLevel}
-              onOpenProgression={() => setIsProgressionOpen(true)}
-              levelUpNotice={levelUpNotice}
-              selectedAgentId={selectedAgentId}
-              onSelectAgent={setSelectedAgentId}
-              activeTask={activeTask}
-              sceneTheme={settings.sceneTheme}
-              onChangeSceneTheme={handleChangeSceneTheme}
-            />
+            <Suspense fallback={<ViewLoadingFallback label="3D Sanal Ofis sahnesi yükleniyor..." />}>
+              <OfficeScene
+                agentStates={agentStates}
+                agentEngines={settings.agentEngines}
+                progression={progression}
+                displayOfficeLevel={displayOfficeLevel}
+                previewOfficeLevel={previewOfficeLevel}
+                onSetPreviewOfficeLevel={setPreviewOfficeLevel}
+                onOpenProgression={() => setIsProgressionOpen(true)}
+                levelUpNotice={levelUpNotice}
+                selectedAgentId={selectedAgentId}
+                onSelectAgent={setSelectedAgentId}
+                activeTask={activeTask}
+                sceneTheme={settings.sceneTheme}
+                onChangeSceneTheme={handleChangeSceneTheme}
+              />
+            </Suspense>
           </div>
 
           <div className="h-[540px] min-h-0 lg:col-span-5 lg:h-full lg:min-h-0 lg:overflow-hidden xl:col-span-4">
@@ -1039,38 +1058,46 @@ ${plan.steps
         {/* PANO SEKME GÖRÜNÜMÜ */}
         {activeTab === 'pano' && (
           <div className="flex-1">
-            <BoardView
-              tasks={tasks}
-              outputs={outputs}
-              progression={progression}
-              onOpenProgression={() => setIsProgressionOpen(true)}
-              onClearOutputs={handleClearOutputs}
-              onGoToOffice={() => setActiveTab('ofis')}
-              onAuditWithSiberci={handleAuditWithSiberci}
-            />
+            <Suspense fallback={<ViewLoadingFallback label="Görev panosu yükleniyor..." />}>
+              <BoardView
+                tasks={tasks}
+                outputs={outputs}
+                progression={progression}
+                onOpenProgression={() => setIsProgressionOpen(true)}
+                onClearOutputs={handleClearOutputs}
+                onGoToOffice={() => setActiveTab('ofis')}
+                onAuditWithSiberci={handleAuditWithSiberci}
+              />
+            </Suspense>
           </div>
         )}
 
         {/* AYARLAR SEKME GÖRÜNÜMÜ */}
         {activeTab === 'ayarlar' && (
           <div className="flex-1">
-            <SettingsView
-              settings={settings}
-              onSaveSettings={handleSaveSettings}
-              onResetAllData={handleResetAllData}
-            />
+            <Suspense fallback={<ViewLoadingFallback label="Ayarlar yükleniyor..." />}>
+              <SettingsView
+                settings={settings}
+                onSaveSettings={handleSaveSettings}
+                onResetAllData={handleResetAllData}
+              />
+            </Suspense>
           </div>
         )}
       </main>
 
-      <ProgressionModal
-        isOpen={isProgressionOpen}
-        onClose={() => setIsProgressionOpen(false)}
-        progression={progression}
-        previewOfficeLevel={previewOfficeLevel}
-        onSetPreviewOfficeLevel={setPreviewOfficeLevel}
-        onAddBonusXp={handleAddBonusXp}
-      />
+      {isProgressionOpen && (
+        <Suspense fallback={null}>
+          <ProgressionModal
+            isOpen={isProgressionOpen}
+            onClose={() => setIsProgressionOpen(false)}
+            progression={progression}
+            previewOfficeLevel={previewOfficeLevel}
+            onSetPreviewOfficeLevel={setPreviewOfficeLevel}
+            onAddBonusXp={handleAddBonusXp}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

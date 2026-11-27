@@ -1,6 +1,7 @@
 # 🏢 3D Sanal AI Ajan Ofisi
 
 [![sauron-guard](https://github.com/Suats7/sanal-ofis/actions/workflows/sauron-guard.yml/badge.svg)](https://github.com/Suats7/sanal-ofis/actions/workflows/sauron-guard.yml)
+[![unit-tests](https://github.com/Suats7/sanal-ofis/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/Suats7/sanal-ofis/actions/workflows/unit-tests.yml)
 [![Canlı Demo](https://img.shields.io/badge/Canl%C4%B1_Demo-suats7.github.io%2Fsanal--ofis-4f46e5?style=flat-square)](https://suats7.github.io/sanal-ofis/)
 
 🌐 **Canlı Demo:** **[https://suats7.github.io/sanal-ofis/](https://suats7.github.io/sanal-ofis/)**
@@ -54,10 +55,11 @@ npm install
 npm run dev
 ```
 
-Doğrulama ve üretim derlemesi:
+Doğrulama, birim testleri ve üretim derlemesi:
 
 ```bash
 npm run verify:sauron
+npm test
 npm run build
 ```
 
